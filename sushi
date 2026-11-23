@@ -1,0 +1,983 @@
+--
+-- PostgreSQL database dump
+--
+
+\restrict bVFZarVfFQwWvy6je2ycfpQu5C5McKDPZzuVDbHCwYtt54t3mU4oGUrDJ6m12uc
+
+-- Dumped from database version 18.3
+-- Dumped by pg_dump version 18.3
+
+-- Started on 2026-06-09 21:17:48
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET transaction_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- TOC entry 235 (class 1255 OID 16538)
+-- Name: update_timestamp_column(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.update_timestamp_column() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+   NEW.updated_at = NOW(); 
+   RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION public.update_timestamp_column() OWNER TO postgres;
+
+SET default_tablespace = '';
+
+SET default_table_access_method = heap;
+
+--
+-- TOC entry 219 (class 1259 OID 16389)
+-- Name: categories; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.categories (
+    id integer NOT NULL,
+    name character varying(255) NOT NULL,
+    slug character varying(255) NOT NULL,
+    order_num integer
+);
+
+
+ALTER TABLE public.categories OWNER TO postgres;
+
+--
+-- TOC entry 220 (class 1259 OID 16397)
+-- Name: categories_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.categories_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.categories_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 5114 (class 0 OID 0)
+-- Dependencies: 220
+-- Name: categories_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.categories_id_seq OWNED BY public.categories.id;
+
+
+--
+-- TOC entry 221 (class 1259 OID 16398)
+-- Name: departments; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.departments (
+    id integer NOT NULL,
+    name character varying(50) NOT NULL,
+    slug character varying(50) NOT NULL
+);
+
+
+ALTER TABLE public.departments OWNER TO postgres;
+
+--
+-- TOC entry 222 (class 1259 OID 16404)
+-- Name: departments_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.departments_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.departments_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 5115 (class 0 OID 0)
+-- Dependencies: 222
+-- Name: departments_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.departments_id_seq OWNED BY public.departments.id;
+
+
+--
+-- TOC entry 223 (class 1259 OID 16405)
+-- Name: order_items; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.order_items (
+    id integer NOT NULL,
+    order_id integer,
+    product_id integer,
+    quantity integer NOT NULL,
+    price_at_moment numeric(10,2) NOT NULL,
+    item_status character varying(20) DEFAULT 'pending'::character varying
+);
+
+
+ALTER TABLE public.order_items OWNER TO postgres;
+
+--
+-- TOC entry 224 (class 1259 OID 16412)
+-- Name: order_items_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.order_items_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.order_items_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 5116 (class 0 OID 0)
+-- Dependencies: 224
+-- Name: order_items_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.order_items_id_seq OWNED BY public.order_items.id;
+
+
+--
+-- TOC entry 225 (class 1259 OID 16413)
+-- Name: orders; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.orders (
+    id integer NOT NULL,
+    user_id integer,
+    total_price numeric(10,2) NOT NULL,
+    status character varying(50) DEFAULT 'new'::character varying,
+    type character varying(20) NOT NULL,
+    contact_name character varying(100),
+    contact_phone character varying(50),
+    address_id integer,
+    payment_method character varying(50),
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    rating integer,
+    review_text text,
+    is_review_replied boolean DEFAULT false,
+    subtotal_price numeric(10,2),
+    discount_amount numeric(10,2),
+    delivery_cost numeric(10,2),
+    change_from integer,
+    courier_id integer,
+    updated_at timestamp with time zone DEFAULT now(),
+    delivery_address_details jsonb,
+    CONSTRAINT orders_rating_check CHECK (((rating >= 1) AND (rating <= 5)))
+);
+
+
+ALTER TABLE public.orders OWNER TO postgres;
+
+--
+-- TOC entry 226 (class 1259 OID 16424)
+-- Name: orders_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.orders_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.orders_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 5117 (class 0 OID 0)
+-- Dependencies: 226
+-- Name: orders_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.orders_id_seq OWNED BY public.orders.id;
+
+
+--
+-- TOC entry 227 (class 1259 OID 16425)
+-- Name: products; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.products (
+    id integer NOT NULL,
+    category_id integer NOT NULL,
+    name character varying(255) NOT NULL,
+    subtitle character varying(255),
+    description text NOT NULL,
+    price numeric(10,2) NOT NULL,
+    image_url character varying(255),
+    special_tag character varying(50),
+    is_available boolean DEFAULT true,
+    department_id integer
+);
+
+
+ALTER TABLE public.products OWNER TO postgres;
+
+--
+-- TOC entry 228 (class 1259 OID 16436)
+-- Name: products_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.products_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.products_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 5118 (class 0 OID 0)
+-- Dependencies: 228
+-- Name: products_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.products_id_seq OWNED BY public.products.id;
+
+
+--
+-- TOC entry 229 (class 1259 OID 16437)
+-- Name: promocodes; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.promocodes (
+    id integer NOT NULL,
+    code character varying(50) NOT NULL,
+    discount_percent integer NOT NULL,
+    is_active boolean DEFAULT true,
+    valid_from timestamp with time zone,
+    valid_to timestamp with time zone
+);
+
+
+ALTER TABLE public.promocodes OWNER TO postgres;
+
+--
+-- TOC entry 230 (class 1259 OID 16444)
+-- Name: promocodes_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.promocodes_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.promocodes_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 5119 (class 0 OID 0)
+-- Dependencies: 230
+-- Name: promocodes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.promocodes_id_seq OWNED BY public.promocodes.id;
+
+
+--
+-- TOC entry 231 (class 1259 OID 16445)
+-- Name: user_addresses; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.user_addresses (
+    id integer NOT NULL,
+    user_id integer,
+    city character varying(100) DEFAULT 'Москва'::character varying,
+    street character varying(255) NOT NULL,
+    house character varying(50) NOT NULL,
+    apartment character varying(50),
+    entrance character varying(50),
+    floor character varying(50),
+    intercom character varying(50),
+    comment text,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+ALTER TABLE public.user_addresses OWNER TO postgres;
+
+--
+-- TOC entry 232 (class 1259 OID 16455)
+-- Name: user_addresses_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.user_addresses_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.user_addresses_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 5120 (class 0 OID 0)
+-- Dependencies: 232
+-- Name: user_addresses_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.user_addresses_id_seq OWNED BY public.user_addresses.id;
+
+
+--
+-- TOC entry 233 (class 1259 OID 16456)
+-- Name: users; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.users (
+    id integer NOT NULL,
+    name character varying(100),
+    email character varying(100) NOT NULL,
+    phone character varying(20),
+    password_hash character varying(255) NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    is_verified boolean DEFAULT false,
+    verification_token character varying(255),
+    role character varying(20) DEFAULT 'customer'::character varying,
+    is_on_shift boolean DEFAULT false NOT NULL,
+    avatar_url character varying(255)
+);
+
+
+ALTER TABLE public.users OWNER TO postgres;
+
+--
+-- TOC entry 234 (class 1259 OID 16467)
+-- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.users_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.users_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 5121 (class 0 OID 0)
+-- Dependencies: 234
+-- Name: users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
+
+
+--
+-- TOC entry 4892 (class 2604 OID 16468)
+-- Name: categories id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.categories ALTER COLUMN id SET DEFAULT nextval('public.categories_id_seq'::regclass);
+
+
+--
+-- TOC entry 4893 (class 2604 OID 16469)
+-- Name: departments id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.departments ALTER COLUMN id SET DEFAULT nextval('public.departments_id_seq'::regclass);
+
+
+--
+-- TOC entry 4894 (class 2604 OID 16470)
+-- Name: order_items id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.order_items ALTER COLUMN id SET DEFAULT nextval('public.order_items_id_seq'::regclass);
+
+
+--
+-- TOC entry 4896 (class 2604 OID 16471)
+-- Name: orders id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.orders ALTER COLUMN id SET DEFAULT nextval('public.orders_id_seq'::regclass);
+
+
+--
+-- TOC entry 4901 (class 2604 OID 16472)
+-- Name: products id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.products ALTER COLUMN id SET DEFAULT nextval('public.products_id_seq'::regclass);
+
+
+--
+-- TOC entry 4903 (class 2604 OID 16473)
+-- Name: promocodes id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.promocodes ALTER COLUMN id SET DEFAULT nextval('public.promocodes_id_seq'::regclass);
+
+
+--
+-- TOC entry 4905 (class 2604 OID 16474)
+-- Name: user_addresses id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.user_addresses ALTER COLUMN id SET DEFAULT nextval('public.user_addresses_id_seq'::regclass);
+
+
+--
+-- TOC entry 4908 (class 2604 OID 16475)
+-- Name: users id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
+
+
+--
+-- TOC entry 5093 (class 0 OID 16389)
+-- Dependencies: 219
+-- Data for Name: categories; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.categories (id, name, slug, order_num) FROM stdin;
+2	Сеты	sets	2
+3	Салаты и закуски	salads	3
+4	Воки	woks	4
+5	Десерты	desserts	5
+6	Добавки	additions	6
+7	Напитки	drinks	7
+1	Вкуснейшие роллы	rolls	1
+\.
+
+
+--
+-- TOC entry 5095 (class 0 OID 16398)
+-- Dependencies: 221
+-- Data for Name: departments; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.departments (id, name, slug) FROM stdin;
+1	Суши-бар (Холодный)	sushi
+2	Горячий цех	hot
+3	Бар	bar
+\.
+
+
+--
+-- TOC entry 5097 (class 0 OID 16405)
+-- Dependencies: 223
+-- Data for Name: order_items; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.order_items (id, order_id, product_id, quantity, price_at_moment, item_status) FROM stdin;
+71	41	16	1	285.00	done
+70	41	18	1	450.00	done
+69	41	17	1	370.00	done
+72	42	16	1	285.00	done
+73	42	17	1	370.00	done
+75	43	18	1	450.00	done
+74	43	17	1	370.00	done
+76	44	16	1	285.00	done
+77	44	17	1	370.00	done
+78	45	16	1	285.00	done
+79	45	17	1	370.00	done
+80	46	16	1	285.00	done
+81	46	18	1	450.00	done
+82	46	32	2	179.00	done
+83	47	27	1	1799.00	done
+132	66	16	1	285.00	done
+134	66	18	1	450.00	done
+133	66	17	1	370.00	done
+84	48	18	1	450.00	done
+85	48	24	1	999.00	done
+86	48	38	1	190.00	done
+90	48	49	2	275.00	done
+87	48	44	1	420.00	done
+92	48	62	1	45.00	done
+89	48	70	1	5000.00	done
+91	48	71	1	5.00	done
+88	48	73	1	310.00	done
+93	49	21	1	155.00	done
+95	49	27	2	1799.00	done
+94	49	29	1	235.00	done
+100	50	24	1	999.00	done
+99	50	25	1	1395.00	done
+98	50	33	1	460.00	done
+97	50	34	1	580.00	done
+96	50	43	1	480.00	done
+101	51	30	9	370.00	done
+102	51	46	1	220.00	done
+104	52	63	2	45.00	done
+103	52	16	2	285.00	done
+105	53	18	1	450.00	done
+107	54	16	3	285.00	done
+106	53	17	1	370.00	done
+108	55	16	3	285.00	done
+110	55	23	1	1570.00	done
+109	55	24	1	999.00	done
+111	55	30	1	370.00	done
+112	55	31	1	159.00	done
+113	55	32	1	179.00	done
+136	67	18	1	450.00	done
+135	67	17	1	370.00	done
+120	58	18	1	450.00	done
+119	58	17	1	370.00	done
+121	59	16	1	285.00	done
+122	60	16	1	285.00	done
+123	61	16	1	285.00	done
+124	61	17	1	370.00	done
+137	68	23	1	1570.00	done
+126	62	18	1	450.00	done
+125	62	17	1	370.00	done
+128	63	18	1	450.00	done
+127	63	17	1	370.00	done
+129	64	19	1	299.00	done
+130	64	20	2	180.00	done
+131	65	27	1	1799.00	done
+138	68	24	1	999.00	done
+139	69	16	1	285.00	done
+140	69	17	1	370.00	done
+142	70	18	1	450.00	done
+141	70	17	1	370.00	done
+144	71	18	1	450.00	done
+143	71	17	1	370.00	done
+145	72	17	1	370.00	done
+\.
+
+
+--
+-- TOC entry 5099 (class 0 OID 16413)
+-- Dependencies: 225
+-- Data for Name: orders; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.orders (id, user_id, total_price, status, type, contact_name, contact_phone, address_id, payment_method, created_at, rating, review_text, is_review_replied, subtotal_price, discount_amount, delivery_cost, change_from, courier_id, updated_at, delivery_address_details) FROM stdin;
+41	9	1105.00	completed	delivery	Кирилл	123	1	card	2026-02-20 21:15:23.036459	\N	\N	f	\N	\N	\N	\N	\N	2026-06-05 22:54:39.248982+03	\N
+43	9	820.00	completed	delivery	Кирилл	123	1	card	2026-03-08 12:22:08.118329	\N	\N	f	\N	\N	\N	\N	\N	2026-06-05 22:54:39.248982+03	\N
+44	9	655.00	completed	delivery	Кирилл	123	2	card	2026-03-08 12:28:09.479384	\N	\N	f	\N	\N	\N	\N	\N	2026-06-05 22:54:39.248982+03	\N
+55	9	3719.00	completed	delivery	Кирилл	123123123	1	card	2026-06-05 21:12:12.818651	\N	\N	f	4132.00	413.00	0.00	\N	\N	2026-06-05 22:54:39.248982+03	\N
+45	9	655.00	completed	delivery	Кирилл	123	2	card	2026-05-05 20:31:37.287471	\N	\N	f	\N	\N	\N	\N	\N	2026-06-05 22:54:39.248982+03	\N
+42	9	655.00	completed	delivery	Кирилл	123	1	card	2026-03-08 12:11:03.378153	5	Круто, вкусно!	t	\N	\N	\N	\N	\N	2026-06-05 22:54:39.248982+03	\N
+47	\N	1799.00	completed	pickup	Гость в зале	\N	\N	card	2026-05-14 18:23:18.818846	\N	\N	f	\N	\N	\N	\N	\N	2026-06-05 22:54:39.248982+03	\N
+46	9	1093.00	completed	delivery	Кирилл	89536773400	1	card	2026-05-13 21:02:22.943555	5	Очень вкусно, спасибо!	t	\N	\N	\N	\N	\N	2026-06-05 22:54:39.248982+03	\N
+68	9	2569.00	delivering	delivery	Кирилл	+7 (122) 222-22-22	2	card	2026-06-09 20:45:34.942005	\N	\N	f	2569.00	0.00	0.00	\N	10	2026-06-09 21:15:07.247276+03	\N
+64	\N	594.00	completed	pickup	Гость в зале	\N	\N	cash	2026-06-09 20:11:27.793981	\N	\N	f	659.00	65.00	0.00	\N	\N	2026-06-09 20:20:45.078118+03	\N
+63	9	820.00	delivering	delivery	Кирилл	+7 (111) 111-11-11	2	card	2026-06-09 19:31:42.24051	\N	\N	f	820.00	0.00	0.00	\N	10	2026-06-09 20:20:47.050809+03	\N
+65	\N	1620.00	delivering	delivery	Маша	895346773400	\N	cash	2026-06-09 20:17:24.137805	\N	\N	f	1799.00	179.00	0.00	\N	10	2026-06-09 20:20:49.637103+03	{"floor": "2", "street": "Химический переулок 6А", "entrance": "2", "intercom": "Нету", "apartment": "19"}
+69	9	805.00	delivering	delivery	Кирилл	+7 (222) 222-22-22	2	card	2026-06-09 20:48:47.421749	\N	\N	f	655.00	0.00	150.00	\N	10	2026-06-09 21:15:08.830762+03	\N
+58	9	820.00	completed	delivery	Кирилл	+7 (234) 234-23-42	1	cash	2026-06-05 22:09:20.078986	\N	\N	f	820.00	0.00	0.00	4000	10	2026-06-05 22:54:39.248982+03	\N
+70	9	820.00	delivering	delivery	Кирилл	+7 (222) 222-22-22	2	card	2026-06-09 21:07:30.978745	\N	\N	f	820.00	0.00	0.00	\N	10	2026-06-09 21:15:10.201361+03	\N
+66	\N	995.00	delivering	delivery	Тарас Бульба	228228	\N	card	2026-06-09 20:30:38.647659	\N	\N	f	1105.00	110.00	0.00	\N	10	2026-06-09 20:31:14.225653+03	{"floor": "5", "street": "Воровского 48", "entrance": "5", "intercom": "Конечно", "apartment": "11"}
+71	9	820.00	delivering	delivery	Кирилл	+7 (222) 222-22-22	2	card	2026-06-09 21:09:44.67722	\N	\N	f	820.00	0.00	0.00	\N	10	2026-06-09 21:15:12.213738+03	\N
+50	\N	3914.00	completed	pickup	Гость в зале	\N	\N	card	2026-05-18 11:03:33.459519	\N	\N	f	\N	\N	\N	\N	\N	2026-06-05 22:54:39.248982+03	\N
+72	9	520.00	delivering	delivery	Кирилл	+7 (111) 111-11-11	2	card	2026-06-09 21:14:26.960808	\N	\N	f	370.00	0.00	150.00	\N	10	2026-06-09 21:15:13.72334+03	\N
+67	9	820.00	delivering	delivery	Кирилл	+7 (123) 123-12-31	2	cash	2026-06-09 20:44:26.837344	\N	\N	f	820.00	0.00	0.00	1000	10	2026-06-09 20:45:02.800393+03	\N
+49	\N	3988.00	completed	delivery	Гость в зале	\N	\N	card	2026-05-18 11:03:24.545294	\N	\N	f	\N	\N	\N	\N	\N	2026-06-05 22:54:39.248982+03	\N
+48	9	7969.00	completed	delivery	Кирилл	89513526133	1	cash	2026-05-18 10:59:16.164772	\N	\N	f	\N	\N	\N	\N	\N	2026-06-05 22:54:39.248982+03	\N
+51	9	3550.00	completed	delivery	Кирилл	89513526133	2	cash	2026-05-18 11:06:58.746882	\N	\N	f	\N	\N	\N	\N	\N	2026-06-05 22:54:39.248982+03	\N
+60	9	435.00	completed	delivery	Кирилл	+7 (123) 123-12-31	2	card	2026-06-05 22:45:48.968538	\N	\N	f	285.00	0.00	150.00	\N	10	2026-06-05 22:56:04.667127+03	\N
+59	9	435.00	completed	delivery	Кирилл	+7 (953) 677-34-00	1	cash	2026-06-05 22:39:30.583298	\N	\N	f	285.00	0.00	150.00	1000	10	2026-06-05 22:59:01.441154+03	\N
+61	9	805.00	completed	delivery	Кирилл	+7 (123) 123-12-31	2	card	2026-06-05 23:08:54.035625	\N	\N	f	655.00	0.00	150.00	\N	10	2026-06-05 23:46:25.783271+03	\N
+52	9	744.00	completed	delivery	Кирилл	123123123123123123123	2	card	2026-06-05 20:46:23.498213	\N	\N	f	660.00	66.00	150.00	\N	\N	2026-06-05 22:54:39.248982+03	\N
+53	\N	820.00	completed	delivery	Гость в зале	\N	\N	card	2026-06-05 20:48:26.749286	\N	\N	f	\N	\N	\N	\N	\N	2026-06-05 22:54:39.248982+03	\N
+54	9	770.00	completed	delivery	Кирилл	213123123123	1	card	2026-06-05 20:50:06.764696	\N	\N	f	855.00	85.00	0.00	\N	\N	2026-06-05 22:54:39.248982+03	\N
+62	9	738.00	completed	delivery	Кирилл	+7 (555) 555-55-55	2	card	2026-06-09 19:03:28.814204	\N	\N	f	820.00	82.00	0.00	\N	10	2026-06-09 19:28:55.577748+03	\N
+\.
+
+
+--
+-- TOC entry 5101 (class 0 OID 16425)
+-- Dependencies: 227
+-- Data for Name: products; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.products (id, category_id, name, subtitle, description, price, image_url, special_tag, is_available, department_id) FROM stdin;
+15	1	Бонито	Хит	Гармоничное сочетание жареного лосося, свежего огурца и сливочного сыра под «шубкой» из стружки тунца.	310.00	\\img\\бонито.png	Хит	t	1
+16	1	Аляска	От шефа	Сочное филе лосося, сливочный сыр и хрустящий огурец в ароматной обсыпке из кунжута.	285.00	\\img\\аляска.png	От шефа	t	1
+17	1	Дракон	Хит	Ломтики угря поверх ролла, внутри — сливочный сыр и спелое авокадо. Завершенный вкус благодаря сладкому соусу и кунжуту.	370.00	\\img\\дракон.png	Хит	t	2
+60	6	Васаби	\N	5 гр	20.00	\\img\\васаби.png	\N	t	3
+18	1	Калифорния	\N	Сочное мясо краба, спелый авокадо и хрустящий огурец. Всё это украшено россыпью икры тобико, которая приятно лопается во рту.	450.00	\\img\\калифорния.png	\N	t	1
+19	1	Канада	От шефа	Лосось и угорь в одном ролле. Мягкая начинка со сливочным сыром и огурцом, обернутая в аппетитный пласт угря под густым соусом.	299.00	\\img\\канада.png	От шефа	t	1
+20	1	Ролл с лососем	\N	Нежнейшее филе свежего лосося в объятиях правильно сваренного риса и хрустящих водорослей нори.	180.00	\\img\\с лососем.png	\N	t	1
+21	1	Ролл с огурцом	\N	Сочные, хрустящие брусочки свежего огурца, завернутые в рис и ароматные нори.	155.00	\\img\\с огурцом.png	\N	t	1
+22	2	Гейша	Хит	Утонченное сочетание для настоящих ценителей. Нежнейшая Филадельфия» с лососем, благородные суши с тунцом и сладковатым японским омлетом. Яркий акцент — роллы, украшенные крупной красной икрой.	975.00	\\img\\гейша.png	Хит	t	1
+23	2	Гурман	\N	Нежная «Филадельфия» со сливочным сыром, яркие роллы в хрустящей икре масаго, ароматный кунжут и классические маки. Максимум лосося и удовольствия в каждом кусочке.	1570.00	\\img\\гурман.png	\N	t	1
+24	2	Классика	\N	Четыре безупречных вкуса в одном наборе: нежный лосось, пикантный копченый угорь с кунжутом, маслянистое спелое авокадо и освежающий хрустящий огурец. Простота, доведенная до совершенства.	999.00	\\img\\классика.png	\N	t	1
+25	2	Нирвана	От шефа	Роллы, щедро обваленные в разноцветной икре летучей рыбы. Приятно лопающиеся икринки идеально дополняют сочную начинку из краба, лосося и свежих овощей. 	1395.00	\\img\\нирвана.png	От шефа	t	1
+26	2	Тет-а-тет	\N	Сбалансированный набор для двоих. В составе главные хиты: лосось со сливочным сыром, угорь под соусом унаги и ролл с икрой тобико.	850.00	\\img\\тет-а-тет.png	\N	t	1
+27	2	Фудзияма	\N	Сет объединяет три главных хита. В основе — много лосося и сливочного сыра (Филадельфия), дополненных роллом в икре масаго (Калифорния) и легкими хосомаки с огурцом.	1799.00	\\img\\фудзияма.png	\N	t	1
+29	3	Греческий	\N	Легкий микс из свежих овощей, маслин и традиционного сыра фета. Главная изюминка — добавление сочных креветок и цитрусовых ноток. Заправляется оливковым маслом.	235.00	\\img\\греческий.png	\N	t	1
+30	3	Цезарь	\N	Сочное куриное филе-гриль на подушке из хрустящих листьев салата. Мы добавляем золотистые гренки, ароматный пармезан и щедро заправляем фирменным соусом «Цезарь». 	370.00	\\img\\цезарь.png	\N	t	1
+31	3	Картошка фри (мини)	\N	Обжаренные до идеального хруста золотистые брусочки. Горячая, соленая корочка снаружи и мягкая, рассыпчатая мякоть внутри.	159.00	\\img\\картошка.png	\N	t	2
+32	3	Картошка фри (стандарт)	\N	Обжаренные до идеального хруста золотистые брусочки. Горячая, соленая корочка снаружи и мягкая, рассыпчатая мякоть внутри.	179.00	\\img\\картошка.png	\N	t	2
+33	3	Креветки (мини)	\N	Крупные, сочные креветки в воздушном, хрустящем кляре. Деликатный вкус морепродуктов сохраняется внутри, а золотистая корочка придает приятный хруст.	460.00	\\img\\креветки.png	\N	t	2
+34	3	Креветки (стандарт)	\N	Крупные, сочные креветки в воздушном, хрустящем кляре. Деликатный вкус морепродуктов сохраняется внутри, а золотистая корочка придает приятный хруст.	580.00	\\img\\креветки.png	\N	t	2
+35	3	Наггетсы (мини)	\N	Нежнейшее белое куриное мясо в золотистой хрустящей панировке. Сочные внутри и поджаристые снаружи.	149.00	\\img\\наггетсы.png	\N	t	2
+36	3	Наггетсы (стандарт)	\N	Нежнейшее белое куриное мясо в золотистой хрустящей панировке. Сочные внутри и поджаристые снаружи.	169.00	\\img\\наггетсы.png	\N	t	2
+38	3	Онигири с курицей	\N	Идеально сваренный рис, лист нори и щедрая порция курицы внутри. Удобный формат, чтобы перекусить на ходу, не пачкая руки.	190.00	\\img\\онигири с курицей.png	\N	t	1
+39	3	Жареный онигири	\N	Рисовый треугольник с куриным филе, обжаренный во фритюре. Теплый, сытный и с приятной хрустящей корочкой. Вкус раскрывается по-новому.	250.00	\\img\\жареный онигири.png	\N	t	2
+40	4	Рамен с курицей	\N	Наваристый, но легкий куриный бульон с упругой пшеничной лапшой. Мы добавляем нежное куриное филе, маринованное яйцо и свежую зелень.	380.00	\\img\\рамен с курицей.png	\N	t	2
+41	4	Рамен со свининой	От шефа	Пшеничная лапша в мясном бульоне. Главный ингредиент — томленая свинина, которая буквально тает во рту. Подается с яйцом, нори и зеленым луком.	370.00	\\img\\рамен со свининой.png	От шефа	t	2
+42	4	Суп том ям	\N	Традиционный кисло-острый суп. В составе: тигровые креветки, шампиньоны (или шиитаке), томаты черри, кокосовое молоко и паста том ям.	580.00	\\img\\том ям.png	\N	t	2
+43	4	Удон с креветками	\N	Нежные тигровые креветки, обжаренные с овощами, идеально сочетаются с мягкой пшеничной лапшой. Сладковато-пикантный соус связывает ингредиенты в единую симфонию вкуса.	480.00	\\img\\удон с креветками.png	\N	t	2
+44	4	Удон с курицей	\N	Толстая пшеничная лапша, обжаренная на живом огне с сочными кусочками курицы и свежими овощами. Всё это пропитано густым соусом терияки и посыпано кунжутом.	420.00	\\img\\удон с курицей.png	\N	t	2
+45	5	Чизкейк банан	\N	Сладость спелого банана идеально сочетается со сливочным сыром, создавая текстуру нежного крема. 	220.00	\\img\\банановый чизкейк.png	\N	t	1
+46	5	Чизкейк клубника	\N	Плотная, но нежная текстура сливочного сыра, дополненная ярким ароматом и сладостью спелой клубники. 	220.00	\\img\\клубничный чизкейк.png	\N	t	1
+47	5	Чизкейк лайм	\N	Освежающая кислинка лайма пронизывает сливочную текстуру, оставляя приятное цитрусовое послевкусие. Не приторный и воздушный	220.00	\\img\\лаймовый чизкейк.png	\N	t	1
+48	5	Чизкейк шоколад-трюфель	\N	Шоколадная основа и густая, бархатистая сырная масса с насыщенным вкусом шоколада.	250.00	\\img\\шоколадный чизкейк с трюфелем.png	\N	t	1
+49	5	Моти шоколад-лайм	\N	Благородная горчинка темного шоколада встречается с дерзкой цитрусовой свежестью лайма. Яркий и необычный дуэт.	275.00	\\img\\шоколадный моти с лаймом.png	\N	t	1
+50	5	Моти шоколад	\N	Тягучее рисовое тесто скрывает насыщенный шоколадный ганаш, похожий на тающее мороженое.	275.00	\\img\\шоколадный моти.png	\N	t	1
+51	5	Моти яблоко	\N	Освежающий вкус спелого яблока в нежнейшем сливочном креме. Легкая кислинка идеально балансирует сладость рисового теста.	275.00	\\img\\яблочный моти.png	\N	t	1
+61	6	Имбирь	\N	20 гр	30.00	\\img\\имбирь.png	\N	t	3
+62	6	Соевый соус	\N	30 мл	45.00	\\img\\соевый.png	\N	t	3
+63	6	Сладкий чили	Хит	30 мл	45.00	\\img\\сладкий чили.png	Хит	t	3
+64	6	Кетчуп	\N	30 мл	45.00	\\img\\кетчуп.png	\N	t	3
+65	6	Сырный	\N	30 мл	45.00	\\img\\сырный.png	\N	t	3
+66	6	Тар-тар	Хит	30 мл	45.00	\\img\\тар-тар.png	Хит	t	3
+67	6	Подарочный сертификат 	\N	Подарочный сертификат на 500 рублей.	500.00	\\img\\подарочный сертификат.png	\N	t	3
+68	6	Подарочный сертификат 	\N	Подарочный сертификат 1000 рублей.	1000.00	\\img\\подарочный сертификат.png	\N	t	3
+69	6	Подарочный сертификат	\N	Подарочный сертификат 2000 рублей.	2000.00	\\img\\подарочный сертификат.png	\N	t	3
+70	6	Подарочный сертификат 	\N	Подарочный сертификат 5000 рублей.	5000.00	\\img\\подарочный сертификат.png	\N	t	3
+71	6	Палочки	\N	1 шт.	5.00	\\img\\палочки.png	\N	t	3
+72	7	Милкшейк шоколад	\N	0,3 мл	310.00	\\img\\коктейл шоколад.png	\N	t	3
+73	7	Милкшейк клубника	\N	0,3 мл	310.00	\\img\\коктейл клубника.png	\N	t	3
+75	7	Бабл яблоко	\N	0,2 мл	350.00	\\img\\бабл яблоко.png	\N	t	3
+76	7	Бабл малина	\N	0,2 мл	350.00	\\img\\бабл малина.png	\N	t	3
+77	7	Sprite	\N	350 мл	190.00	\\img\\Sprite.png	\N	t	3
+78	7	Dr Pepper	\N	350 мл	190.00	\\img\\Dr Pepper.png	\N	t	3
+79	7	Coca-cola	\N	350 мл	190.00	\\img\\Coca-cola.png	\N	t	3
+80	7	Coca-cola zero		350 мл	190.00	/uploads/product-1778004994418-728009071.png	\N	t	3
+74	7	Милкшейк карамель		0,3 мл	310.00	\\img\\коктейл карамель.png	\N	t	3
+\.
+
+
+--
+-- TOC entry 5103 (class 0 OID 16437)
+-- Dependencies: 229
+-- Data for Name: promocodes; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.promocodes (id, code, discount_percent, is_active, valid_from, valid_to) FROM stdin;
+1	PROMO10	10	t	\N	\N
+\.
+
+
+--
+-- TOC entry 5105 (class 0 OID 16445)
+-- Dependencies: 231
+-- Data for Name: user_addresses; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.user_addresses (id, user_id, city, street, house, apartment, entrance, floor, intercom, comment, created_at) FROM stdin;
+1	9	Киров	Прибрежный бульвар	2	11	1	3	Есть	По приезду позвонить	2026-02-14 21:33:58.96281
+2	9	Киров	Заводская	6	12	1	3	Есть	Позхвонить	2026-03-08 12:27:56.710312
+\.
+
+
+--
+-- TOC entry 5107 (class 0 OID 16456)
+-- Dependencies: 233
+-- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.users (id, name, email, phone, password_hash, created_at, is_verified, verification_token, role, is_on_shift, avatar_url) FROM stdin;
+8	Кирилл	cash@bk.ru	89536773400	$2b$10$EJPwWQFANxe/D.Kvz9bcxu8DYcpIJv.A.GAD5NyrVrt/S9c208bNi	2026-02-14 21:26:11.829061	t	e71994881da50d569bddb1cdd360c4cc16aa84a76d1a000ccde3f09165b141ec	cashier	f	\N
+7	Маня	cook@bk.ru	89513526133	$2b$10$/djYNRz8RgPWFg1FxGYMs.UdMc2Elgvs/ot3MN07YBS06JoOdjnZK	2026-02-13 18:16:51.632967	t	0bd1289af4a8c9aa66be83c4d3ed5672685c6ef4dee72128c3917586b10af04f	cook	f	\N
+11	админ	admin@bk.ru	123	$2b$10$ZQBPItOP0sdYEKluPjxL5OB1o8Gwm6u8/sny3TDfAdaRilkpLnDfm	2026-05-05 20:28:37.449714	t	\N	admin	f	\N
+9	Кирилл	ladard96@bk.ru	89536773400	$2b$10$.l2GIJOjp60fzKqZa6j.MeRjhoZ1UuTRtck.vHIiViDUwLmkv1hvu	2026-02-14 21:26:40.721025	t	\N	customer	f	\N
+10	Кирилл	cour@bk.ru	123	$2b$10$qGV4pjFcwWoUegyb1n8HJefyz90mwP1ABckr8hzWaYd2VNexgaSye	2026-02-20 21:12:48.251816	t	aa2a06a137691ef971ab3b1feba876a5c115b8ea90e44299b9158569bb7e04e4	courier	t	\N
+\.
+
+
+--
+-- TOC entry 5122 (class 0 OID 0)
+-- Dependencies: 220
+-- Name: categories_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.categories_id_seq', 8, true);
+
+
+--
+-- TOC entry 5123 (class 0 OID 0)
+-- Dependencies: 222
+-- Name: departments_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.departments_id_seq', 3, true);
+
+
+--
+-- TOC entry 5124 (class 0 OID 0)
+-- Dependencies: 224
+-- Name: order_items_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.order_items_id_seq', 145, true);
+
+
+--
+-- TOC entry 5125 (class 0 OID 0)
+-- Dependencies: 226
+-- Name: orders_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.orders_id_seq', 72, true);
+
+
+--
+-- TOC entry 5126 (class 0 OID 0)
+-- Dependencies: 228
+-- Name: products_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.products_id_seq', 82, true);
+
+
+--
+-- TOC entry 5127 (class 0 OID 0)
+-- Dependencies: 230
+-- Name: promocodes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.promocodes_id_seq', 1, true);
+
+
+--
+-- TOC entry 5128 (class 0 OID 0)
+-- Dependencies: 232
+-- Name: user_addresses_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.user_addresses_id_seq', 3, true);
+
+
+--
+-- TOC entry 5129 (class 0 OID 0)
+-- Dependencies: 234
+-- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.users_id_seq', 11, true);
+
+
+--
+-- TOC entry 4915 (class 2606 OID 16477)
+-- Name: categories categories_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.categories
+    ADD CONSTRAINT categories_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4917 (class 2606 OID 16479)
+-- Name: categories categories_slug_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.categories
+    ADD CONSTRAINT categories_slug_key UNIQUE (slug);
+
+
+--
+-- TOC entry 4919 (class 2606 OID 16481)
+-- Name: departments departments_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.departments
+    ADD CONSTRAINT departments_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4921 (class 2606 OID 16483)
+-- Name: departments departments_slug_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.departments
+    ADD CONSTRAINT departments_slug_key UNIQUE (slug);
+
+
+--
+-- TOC entry 4923 (class 2606 OID 16485)
+-- Name: order_items order_items_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.order_items
+    ADD CONSTRAINT order_items_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4925 (class 2606 OID 16487)
+-- Name: orders orders_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.orders
+    ADD CONSTRAINT orders_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4927 (class 2606 OID 16489)
+-- Name: products products_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.products
+    ADD CONSTRAINT products_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4929 (class 2606 OID 16491)
+-- Name: promocodes promocodes_code_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.promocodes
+    ADD CONSTRAINT promocodes_code_key UNIQUE (code);
+
+
+--
+-- TOC entry 4931 (class 2606 OID 16493)
+-- Name: promocodes promocodes_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.promocodes
+    ADD CONSTRAINT promocodes_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4933 (class 2606 OID 16495)
+-- Name: user_addresses user_addresses_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.user_addresses
+    ADD CONSTRAINT user_addresses_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4935 (class 2606 OID 16497)
+-- Name: users users_email_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_email_key UNIQUE (email);
+
+
+--
+-- TOC entry 4937 (class 2606 OID 16499)
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4945 (class 2620 OID 16539)
+-- Name: orders update_orders_modtime; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER update_orders_modtime BEFORE UPDATE ON public.orders FOR EACH ROW EXECUTE FUNCTION public.update_timestamp_column();
+
+
+--
+-- TOC entry 4938 (class 2606 OID 16500)
+-- Name: order_items order_items_order_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.order_items
+    ADD CONSTRAINT order_items_order_id_fkey FOREIGN KEY (order_id) REFERENCES public.orders(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 4939 (class 2606 OID 16505)
+-- Name: order_items order_items_product_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.order_items
+    ADD CONSTRAINT order_items_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id);
+
+
+--
+-- TOC entry 4940 (class 2606 OID 16510)
+-- Name: orders orders_address_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.orders
+    ADD CONSTRAINT orders_address_id_fkey FOREIGN KEY (address_id) REFERENCES public.user_addresses(id);
+
+
+--
+-- TOC entry 4941 (class 2606 OID 16515)
+-- Name: orders orders_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.orders
+    ADD CONSTRAINT orders_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
+-- TOC entry 4942 (class 2606 OID 16520)
+-- Name: products products_category_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.products
+    ADD CONSTRAINT products_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.categories(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 4943 (class 2606 OID 16525)
+-- Name: products products_department_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.products
+    ADD CONSTRAINT products_department_id_fkey FOREIGN KEY (department_id) REFERENCES public.departments(id);
+
+
+--
+-- TOC entry 4944 (class 2606 OID 16530)
+-- Name: user_addresses user_addresses_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.user_addresses
+    ADD CONSTRAINT user_addresses_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+-- Completed on 2026-06-09 21:17:48
+
+--
+-- PostgreSQL database dump complete
+--
+
+\unrestrict bVFZarVfFQwWvy6je2ycfpQu5C5McKDPZzuVDbHCwYtt54t3mU4oGUrDJ6m12uc
+
